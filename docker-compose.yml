@@ -1,0 +1,88 @@
+# One command to run everything:  docker compose up --build
+# Then open http://localhost:3000  (API at http://localhost:8010/docs)
+# AI keys are read from apps/api/.env (copy apps/api/.env.example). Neo4j joins in Phase 4.
+# Only the web app and the API are published on the host, so this stack can run next to other projects
+# that use the usual Postgres/Redis/Qdrant ports.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: library
+      POSTGRES_PASSWORD: library
+      POSTGRES_DB: library
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U library"]
+      interval: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+
+  # Vector store for hybrid (dense + BM25) passage search.
+  qdrant:
+    image: qdrant/qdrant:v1.15.0
+    volumes:
+      - qdrant:/qdrant/storage
+
+  api:
+    build: ./apps/api
+    env_file:
+      - path: ./apps/api/.env
+        required: false
+    environment: &api-env
+      DATABASE_URL: postgresql+psycopg://library:library@db:5432/library
+      REDIS_URL: redis://redis:6379/0
+      QDRANT_URL: http://qdrant:6333
+      DATA_DIR: /data
+      MODELS_DIR: /models
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    volumes:
+      - books:/data
+      - models:/models
+    ports:
+      - "8010:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      qdrant:
+        condition: service_started
+
+  # Reads uploaded books (parsing, chunking, covers, indexing) off the API's request path.
+  worker:
+    build: ./apps/api
+    command: ["python", "worker.py"]
+    env_file:
+      - path: ./apps/api/.env
+        required: false
+    environment: *api-env
+    volumes:
+      - books:/data
+      - models:/models
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      qdrant:
+        condition: service_started
+
+  web:
+    build:
+      context: ./apps/web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8010
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  books:
+  qdrant:
+  models:

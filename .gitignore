@@ -1,0 +1,31 @@
+# Dependencies and builds
+node_modules/
+.next/
+dist/
+out/
+*.tsbuildinfo
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Your library: uploaded books, covers, database, search index, downloaded models
+apps/api/data/
+# Raw answers from evaluation runs (the summary lives in apps/api/eval/RESULTS.md)
+apps/api/eval/results/
+
+# Secrets: API keys live here (copy apps/api/.env.example to start)
+.env
+.env.*
+!.env.example
+
+# Editor / tool files
+.claude/
+.vscode/
+.idea/
+.DS_Store
+# Written by `next dev` on every start
+apps/web/AGENTS.md
+apps/web/CLAUDE.md
