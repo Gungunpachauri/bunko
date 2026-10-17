@@ -2,9 +2,10 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { api } from "@/lib/api";
+import { api, type ApiBook } from "@/lib/api";
 import { THEMES } from "@/library/themes";
 import { ThemedSelect } from "@/components/ThemedSelect";
+import { ManageBooks } from "@/library/ui/ManageBooks";
 
 type Status = "waiting" | "uploading" | "processing" | "ready" | "failed";
 interface Job {
@@ -17,13 +18,22 @@ interface Job {
 
 const NEW = "__new__";
 
-/** Add EPUB/PDF books to a room. A new genre name creates a new room, which rises from the water. */
-export function UploadDialog({ open, onClose, genres, onChanged }: {
+export type BooksTab = "add" | "manage";
+
+/**
+ * Add EPUB/PDF books to a room (a new genre name creates a new room, which rises from the water),
+ * or look through your books and remove the ones you don't want.
+ */
+export function UploadDialog({ open, startTab = "add", onClose, genres, books, onChanged }: {
   open: boolean;
+  startTab?: BooksTab;
   onClose: () => void;
   genres: { id: string; title: string }[];
+  books: ApiBook[];
   onChanged: () => void;
 }) {
+  const [tab, setTab] = useState<BooksTab>(startTab);
+  useEffect(() => { if (open) setTab(startTab); }, [open, startTab]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [genre, setGenre] = useState<string>(genres[0]?.id ?? NEW);
   const [newGenre, setNewGenre] = useState("");
@@ -95,12 +105,27 @@ export function UploadDialog({ open, onClose, genres, onChanged }: {
     <AnimatePresence>
       {open && (
         <motion.div className="palette-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={close}>
-          <motion.div className="upload" role="dialog" aria-label="Add books" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+          <motion.div className="upload" role="dialog" aria-label="Your books" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
             onMouseDown={(e) => e.stopPropagation()}>
             <div className="upload-head">
-              <h2>Add books</h2>
+              <div className="upload-tabs" role="tablist" aria-label="Books">
+                <button role="tab" aria-selected={tab === "add"} className={tab === "add" ? "on" : ""} onClick={() => setTab("add")}>Add books</button>
+                <button role="tab" aria-selected={tab === "manage"} className={tab === "manage" ? "on" : ""} onClick={() => setTab("manage")}>
+                  Your books <small>{books.length}</small>
+                </button>
+              </div>
               <button className="card-close" onClick={close} aria-label="Close">×</button>
             </div>
+            {tab === "manage" ? (
+              <>
+                <p className="upload-note">Removing a book deletes its file, highlights and place on the reading map.</p>
+                <ManageBooks genres={genres} books={books} onChanged={onChanged} />
+                <div className="card-actions">
+                  <button className="btn" onClick={close}>Done</button>
+                  <button className="btn primary" onClick={() => setTab("add")}>＋ Add books</button>
+                </div>
+              </>
+            ) : (<>
             <p className="upload-note">EPUB or PDF, from books you own or the public domain (Project Gutenberg works well).</p>
 
             <div
@@ -151,6 +176,7 @@ export function UploadDialog({ open, onClose, genres, onChanged }: {
                 Upload {jobs.filter((j) => j.status === "waiting").length || ""}
               </button>
             </div>
+            </>)}
           </motion.div>
         </motion.div>
       )}

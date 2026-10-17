@@ -3,6 +3,10 @@
 .loading-box { max-width: 520px; padding: 28px; text-align: center; color: #f3eedd; font-family: Georgia, serif; }
 .loading-box h1 { font-size: 26px; margin: 0 0 12px; }
 .loading-box p { opacity: 0.85; line-height: 1.6; }
+.loading-text { font-size: 18px; letter-spacing: 0.04em; animation: loading-breathe 2.4s ease-in-out infinite; }
+.loading-text::before { content: "文庫"; display: block; margin-bottom: 10px; font-size: 13px; letter-spacing: 0.4em; opacity: 0.55; }
+@keyframes loading-breathe { 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { .loading-text { animation: none; } }
 .loading-box pre, .loading-box code { background: #ffffff14; border-radius: 6px; padding: 2px 6px; font-size: 13px; }
 .loading-box pre { padding: 10px 12px; text-align: left; white-space: pre-wrap; }
 kbd { font: 600 10px/1 var(--font-body); padding: 2px 5px; border-radius: 4px; border: 1px solid #ffffff40; margin-left: 6px; opacity: 0.8; }
@@ -44,6 +48,34 @@ kbd { font: 600 10px/1 var(--font-body); padding: 2px 5px; border-radius: 4px; b
 .job.ready .job-status { color: #3f9a5a; }
 .job.failed .job-status { color: #c0392b; }
 .job.processing .job-status, .job.uploading .job-status { color: var(--accent); }
+
+/* Add books / Your books tabs, and the list of your books */
+.upload-tabs { display: flex; gap: 4px; margin-left: -10px; }
+.upload-tabs button {
+  border: 0; background: transparent; color: var(--muted); cursor: pointer; font: 600 15px var(--font-body);
+  padding: 7px 12px; border-radius: 999px;
+}
+.upload-tabs button.on { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.upload-tabs small { font-weight: 500; font-size: 12px; color: var(--muted); margin-left: 3px; }
+.manage { max-height: min(46vh, 420px); overflow: auto; display: flex; flex-direction: column; gap: 14px; margin-bottom: 4px; padding-right: 4px; }
+.manage-room header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.manage-room h3 { margin: 0; font: 700 12px var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; }
+.manage-room h3 small { font-weight: 500; letter-spacing: 0.02em; text-transform: none; color: var(--muted); margin-left: 6px; }
+.manage-room ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.manage-room li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 10px; border-radius: 9px; background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.manage-title { display: flex; flex-direction: column; min-width: 0; font-size: 14px; font-weight: 600; }
+.manage-title, .manage-title small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.manage-title small { font-weight: 400; font-size: 12px; color: var(--muted); }
+.manage-remove, .card-remove {
+  flex: none; border: 0; cursor: pointer; background: transparent; color: var(--muted); font: 600 12.5px var(--font-body);
+  padding: 5px 10px; border-radius: 999px; transition: background .15s, color .15s;
+}
+.manage-remove:hover, .card-remove:hover { color: #c0453a; background: color-mix(in srgb, #c0453a 10%, transparent); }
+.manage-remove.sure, .card-remove.sure { color: #fff; background: #c0453a; }
+.manage-remove:disabled, .card-remove:disabled { opacity: 0.6; cursor: default; }
+.card-remove { display: block; margin: 10px auto 0; font-weight: 500; font-size: 12px; }
+.manage-empty { margin: 10px 0 18px; color: var(--muted); font-size: 14px; }
+.manage-error { margin: 0; padding: 8px 10px; border-radius: 8px; font-size: 13px; color: #c0453a; background: color-mix(in srgb, #c0453a 10%, transparent); }
 
 /* ── Review highlights ──────────────────────────────────────────────── */
 .chip { position: relative; }

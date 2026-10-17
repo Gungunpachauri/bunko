@@ -2,7 +2,7 @@ import uuid
 from typing import Annotated
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
@@ -51,6 +51,21 @@ def create_genre(body: GenreIn, db: Db) -> GenreOut:
     db.add(genre)
     db.commit()
     return genre_out(genre)
+
+
+@router.delete("/genres/{genre_id}", status_code=204)
+def delete_genre(genre_id: str, db: Db) -> Response:
+    """Remove an empty room. Books must be moved out or removed first, and the library keeps at least one room."""
+    genre = db.get(Genre, genre_id)
+    if genre is None:
+        raise HTTPException(404, "Genre not found")
+    if db.scalar(select(func.count()).select_from(Book).where(Book.genre_id == genre_id)):
+        raise HTTPException(409, "This room still has books. Remove them first.")
+    if (db.scalar(select(func.count()).select_from(Genre)) or 0) <= 1:
+        raise HTTPException(409, "The library needs at least one room.")
+    db.delete(genre)
+    db.commit()
+    return Response(status_code=204)
 
 
 @router.get("/continue", response_model=BookOut | None)

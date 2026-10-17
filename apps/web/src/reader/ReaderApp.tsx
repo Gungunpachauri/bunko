@@ -87,7 +87,7 @@ export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startP
         if (!alive) return;
         if (b.status !== "ready") throw new Error(b.status === "failed" ? `This book couldn't be read: ${b.error}` : "This book is still being processed. Try again in a moment.");
         setBook(b);
-        if (b.format === "epub") api.highlights(b.id).then((hs) => alive && setHighlights(hs)).catch(() => {});
+        api.highlights(b.id).then((hs) => alive && setHighlights(hs)).catch(() => {});
         setGenre(lib.genres.find((g) => g.id === b.genre_id) ?? null);
         setRecent(lib.books.filter((x) => x.status === "ready" && x.id !== b.id)
           .sort((x, y) => (y.position?.updated_at ?? "").localeCompare(x.position?.updated_at ?? ""))
@@ -327,7 +327,7 @@ export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startP
 
       <header className={`room-bar ${showChrome ? "" : "hide"}`}>
         <button className="room-btn" onClick={() => router.push("/")} title="Back to the library (Esc)">
-          <span aria-hidden>←</span> Library
+          <span aria-hidden>←</span> <span className="room-btn-label">Library</span>
         </button>
         <div className="room-title">
           <strong>{book?.title ?? "Opening…"}</strong>
@@ -335,7 +335,7 @@ export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startP
         </div>
         <div className="room-tools">
           <button className={`room-icon ${panel === "contents" ? "on" : ""}`} onClick={() => setPanel((p) => (p === "contents" ? "none" : "contents"))} title="Contents" disabled={!chapters.length}>☰</button>
-          {book?.format === "epub" && (
+          {book && (
             <button className={`room-icon ${panel === "highlights" ? "on" : ""}`} onClick={() => setPanel((p) => (p === "highlights" ? "none" : "highlights"))} title="Highlights and notes">
               ✎{highlights.length > 0 && <i className="room-badge">{highlights.length}</i>}
             </button>

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { ReaderClient } from "@/components/ClientOnly";
+import { Loading, ReaderClient } from "@/components/ClientOnly";
 
 type Params = Promise<{ id: string }>;
 type Search = Promise<{ [key: string]: string | string[] | undefined }>;
@@ -19,7 +19,7 @@ async function Reader({ params, searchParams }: { params: Params; searchParams: 
 
 export default function ReadPage({ params, searchParams }: { params: Params; searchParams: Search }) {
   return (
-    <Suspense fallback={<div className="room" />}>
+    <Suspense fallback={<Loading text="Opening your book…" />}>
       <Reader params={params} searchParams={searchParams} />
     </Suspense>
   );

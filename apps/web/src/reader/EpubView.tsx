@@ -131,9 +131,11 @@ export function EpubView({ fileUrl, startAt, paper, fontFamily, fontScale, sprea
         if (cancelled || !host.current) return;
         const b = ePub(data);
         book.current = b;
+        // The gap between page columns: roomy on a desk, small on a phone (a wide gap on a narrow page makes columns overlap).
+        const gap = Math.round(Math.min(96, Math.max(32, host.current.clientWidth * 0.12)));
         const r = b.renderTo(host.current, {
           width: "100%", height: "100%", flow: "paginated", spread: look.current.spread ? "always" : "none",
-          gap: 96, allowScriptedContent: false,
+          gap, allowScriptedContent: false,
         });
         rendition.current = r;
 
@@ -150,7 +152,9 @@ export function EpubView({ fileUrl, startAt, paper, fontFamily, fontScale, sprea
           "h1, h2, h3": { "letter-spacing": "0.02em", "line-height": "1.25 !important", "margin": "0.6em 0 0.8em !important" },
           "*": { "background-color": "transparent !important", "border-color": "rgba(128,110,90,.25) !important" },
           "a": { "color": "inherit !important", "background": "none !important", "text-decoration-color": "rgba(128,110,90,.45) !important" },
-          "img": { "max-width": "100% !important", "border-radius": "2px" },
+          // Pictures and their wrappers never get wider or taller than one page, or they spill into the next column on phones.
+          "div, figure, table, svg": { "max-width": "100% !important", "box-sizing": "border-box" },
+          "img": { "max-width": "100% !important", "max-height": "92vh !important", "height": "auto !important", "object-fit": "contain", "border-radius": "2px" },
           "::selection": { "background": "rgba(196, 140, 60, .3)" },
           // A cited passage: a warm highlighter wash that fades after a few seconds.
           ".wl-cite": { "background-color": "rgba(255, 196, 64, .34) !important", "box-shadow": "0 0 0 4px rgba(255, 196, 64, .34)", "border-radius": "2px", "transition": "background-color 2.5s ease, box-shadow 2.5s ease" },

@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from .. import graph
 from ..config import settings
 from ..db import get_session
 from ..genres import mood_for, slugify, suggest_theme
@@ -108,6 +109,7 @@ def delete_book(book_id: str, db: Db) -> Response:
     db.delete(book)
     db.commit()
     store.delete_book(book_id)
+    graph.drop_orphans(db)  # ideas only this book mentioned leave the reading map too
     return Response(status_code=204)
 
 

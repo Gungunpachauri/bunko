@@ -1,15 +1,17 @@
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Book, RoomId } from "@/library/data/books";
 import type { Theme } from "@/library/themes/types";
 import { coverDataUrl } from "@/library/three/textures";
 
-export function BookCard({ book, theme, onClose, onRead, onConnections, roomTitle, skin = false }: {
+export function BookCard({ book, theme, onClose, onRead, onConnections, onRemove, roomTitle, skin = false }: {
   book: Book; theme: Theme; onClose: () => void; roomTitle?: string;
   /** Open the book; with a panel, the reader opens with Ask or Discuss showing. */
   onRead: (panel?: "ask" | "discuss") => void;
   /** Show the ideas and people in this book, and the other books that share them. */
   onConnections: () => void;
+  /** Delete the book from the library (asks "Sure?" first). */
+  onRemove: () => Promise<void>;
   /** Style the card in `theme` itself rather than inheriting the page's theme (Mixed mode). */
   skin?: boolean;
 }) {
@@ -18,6 +20,12 @@ export function BookCard({ book, theme, onClose, onRead, onConnections, roomTitl
   const [cover, setCover] = useState(book.coverUrl ?? drawn);
   const pct = Math.round(book.progress * 100);
   const page = Math.round(book.progress * book.pages);
+  const [removing, setRemoving] = useState<"ask" | "busy" | null>(null);
+  useEffect(() => {
+    if (removing !== "ask") return;
+    const id = window.setTimeout(() => setRemoving(null), 3500);
+    return () => window.clearTimeout(id);
+  }, [removing]);
 
   return (
     <motion.aside
@@ -70,6 +78,10 @@ export function BookCard({ book, theme, onClose, onRead, onConnections, roomTitl
       </div>
       <button className="btn card-connections" onClick={onConnections}>
         <span aria-hidden>✦</span> Connections <small>ideas this book shares with your others</small>
+      </button>
+      <button className={`card-remove ${removing === "ask" ? "sure" : ""}`} disabled={removing === "busy"}
+        onClick={() => { if (removing === "ask") { setRemoving("busy"); void onRemove(); } else setRemoving("ask"); }}>
+        {removing === "busy" ? "Removing…" : removing === "ask" ? "Sure? This deletes the book and its highlights" : "Remove from library"}
       </button>
     </motion.aside>
   );

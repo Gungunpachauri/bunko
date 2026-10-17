@@ -145,7 +145,7 @@ def build_book(book_id: str, llm=None) -> None:
             st.status, st.error = "failed", str(exc)[:500]
             db.commit()
         finally:
-            _drop_orphans(db)
+            drop_orphans(db)
 
 
 def _store(db: Session, book_id: str, part: list[Chunk], result: dict) -> None:
@@ -174,7 +174,7 @@ def _store(db: Session, book_id: str, part: list[Chunk], result: dict) -> None:
             db.add(Relation(book_id=book_id, source_id=a.id, target_id=b.id, label=label, char_start=chunk.char_start))
 
 
-def _drop_orphans(db: Session) -> None:
+def drop_orphans(db: Session) -> None:
     """Concepts no book mentions any more (after a rebuild or a deleted book)."""
     used = select(Mention.concept_id).distinct()
     db.execute(delete(Concept).where(Concept.id.not_in(used)))

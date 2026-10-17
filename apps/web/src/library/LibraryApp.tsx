@@ -21,7 +21,7 @@ import { IconMap, IconPlay, IconPlus, IconReview, IconSearch, IconTimeline } fro
 import { SoundToggle } from "@/components/SoundToggle";
 import { ConnectionsDialog } from "@/components/ConnectionsDialog";
 import { ReviewDialog } from "@/library/ui/ReviewDialog";
-import { UploadDialog } from "@/library/ui/UploadDialog";
+import { UploadDialog, type BooksTab } from "@/library/ui/UploadDialog";
 import { roomSlots } from "@/library/layout";
 import type { Growth } from "@/library/world/Growth";
 import { buildJourney, type JourneyState } from "@/library/world/journey";
@@ -85,11 +85,11 @@ export default function LibraryApp() {
             <h1>The library server isn&apos;t answering</h1>
             <p>Couldn&apos;t reach <code>{API_URL}</code> ({error}).</p>
             <p>Start it from <code>apps/api</code> with:</p>
-            <pre>.venv/Scripts/python -m uvicorn app.main:app --port 8000</pre>
+            <pre>.venv/Scripts/python -m uvicorn app.main:app --port 8010</pre>
             <button className="enter-btn" onClick={() => refresh()}>Try again</button>
           </div>
         ) : (
-          <div className="loading-box"><p>Opening the library…</p></div>
+          <div className="loading-box"><p className="loading-text">Opening the library…</p></div>
         )}
       </div>
     );
@@ -101,7 +101,8 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
   const router = useRouter();
   const [choice, setChoice] = useState<Choice>(initialChoice);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [uploadOpen, setUploadOpen] = useState(false);
+  // The Books dialog: add new books, or look through and remove yours.
+  const [booksTab, setBooksTab] = useState<BooksTab | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [connectionsFor, setConnectionsFor] = useState<{ id: string; title: string } | null>(null);
   // Ask / Discuss about the open book, right here in the library (it takes the card's place).
@@ -152,7 +153,7 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
     growth.today = today;
   }, [growth, month, today]);
 
-  journey.locked = !!open || paletteOpen || uploadOpen;
+  journey.locked = !!open || paletteOpen || !!booksTab;
   const chapter = Math.min(LAST, Math.round(progress));
   const arrived = Math.abs(progress - chapter) < 0.22;
 
@@ -429,6 +430,17 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
           <BookCard key={open.book.id} book={open.book} theme={bookTheme} onClose={close}
             onRead={(panel) => (panel ? setBookChat({ bookId: open.book.id, mode: panel }) : openBook(open.book.id))}
             onConnections={() => setConnectionsFor({ id: open.book.id, title: open.book.title })}
+            onRemove={async () => {
+              const title = open.book.title;
+              try {
+                await api.deleteBook(open.book.id);
+                close();
+                setToast(`${title} was removed from your library.`);
+              } catch (e) {
+                setToast(`Couldn't remove it: ${e instanceof Error ? e.message : e}`);
+              }
+              refresh();
+            }}
             roomTitle={genreOfOpen ? roomText(bookTheme, genreOfOpen).title : undefined} skin />
         ) : null}
       </AnimatePresence>
@@ -464,7 +476,7 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
               <IconTimeline /><span className="tool-label">{timeline ? "Today" : "Timeline"}</span>
             </button>
             <span className="tool-sep" aria-hidden />
-            <button className="tool icon" onClick={() => { if (timeline) closeTimeline(); setUploadOpen(true); }} disabled={!!open} title="Add books" aria-label="Add books">
+            <button className="tool icon" onClick={() => { if (timeline) closeTimeline(); setBooksTab("add"); }} disabled={!!open} title="Add or remove books" aria-label="Add or remove books">
               <IconPlus />
             </button>
             <SoundToggle className="tool icon" />
@@ -503,13 +515,13 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
             <p className="chapter-body">{hud.body}</p>
             {ch.kind === "gate" && <button className="enter-btn" onClick={() => goTo(1)}>Enter the library</button>}
             {ch.kind === "room" && roomStats(library, ch.genre.id).total === 0 && (
-              <button className="enter-btn" onClick={() => setUploadOpen(true)}>＋ Add books</button>
+              <button className="enter-btn" onClick={() => setBooksTab("add")}>＋ Add books</button>
             )}
             {ch.kind === "overlook" && (
               <div className="chapter-actions">
                 <button className="enter-btn" onClick={continueReading}>Continue reading</button>
                 <button className="chip" onClick={() => goTo(0)}>Back to the gate</button>
-                <button className="chip" onClick={() => setUploadOpen(true)}>＋ Add books</button>
+                <button className="chip" onClick={() => setBooksTab("add")}>＋ Add books</button>
               </div>
             )}
           </motion.section>
@@ -552,6 +564,7 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
         actions={[
           { id: "continue", title: "▶ Continue reading", sub: "Open the book you were last reading" },
           { id: "upload", title: "＋ Add books", sub: "Upload EPUB or PDF files" },
+          { id: "manage", title: "☰ Your books", sub: "See every book and remove the ones you don't want" },
           { id: "map", title: "✧ Reading map", sub: "Your books and their ideas as a star map" },
           { id: "review", title: "✎ Review highlights", sub: due ? `${due} due now` : "Search and review what you highlighted" },
           { id: "overlook", title: "◎ Overlook", sub: "See the whole library from above" },
@@ -560,7 +573,8 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
         onGoToRoom={goToRoom}
         onAction={(id) => {
           if (id === "continue") continueReading();
-          else if (id === "upload") setUploadOpen(true);
+          else if (id === "upload") setBooksTab("add");
+          else if (id === "manage") setBooksTab("manage");
           else if (id === "review") setReviewOpen(true);
           else if (id === "map") router.push("/map");
           else goTo(LAST);
@@ -569,9 +583,11 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
       <ConnectionsDialog book={connectionsFor} onClose={() => setConnectionsFor(null)} />
       <ReviewDialog open={reviewOpen} onClose={() => { setReviewOpen(false); refreshDue(); }} onChanged={() => { refreshDue(); refresh(); }} />
       <UploadDialog
-        open={uploadOpen}
-        onClose={() => setUploadOpen(false)}
+        open={!!booksTab}
+        startTab={booksTab ?? "add"}
+        onClose={() => setBooksTab(null)}
         genres={library.genres.map((g) => ({ id: g.id, title: g.title }))}
+        books={rawBooks}
         onChanged={refresh}
       />
     </div>

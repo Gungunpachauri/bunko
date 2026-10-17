@@ -65,7 +65,7 @@ export interface ReaderProps {
   onError: (message: string) => void;
   /** Keys pressed while focus is inside the book (its iframe swallows them otherwise). */
   onKey: (key: string) => void;
-  /** EPUB only: highlights to draw, text selection, and clicks on a highlight. */
+  /** Highlights to draw, text selection, and clicks on a highlight. */
   highlights?: ReaderHighlight[];
   onSelect?: (s: ReaderSelection | null) => void;
   onHighlightClick?: (id: string, x: number, y: number) => void;

@@ -113,6 +113,8 @@ export const api = {
   savePosition: (id: string, body: { location: string; progress: number; chapter_href?: string | null; chapter_fraction?: number | null }) =>
     req<ApiPosition>(`/api/books/${id}/position`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }),
   deleteBook: (id: string) => req<void>(`/api/books/${id}`, { method: "DELETE" }),
+  /** Only works on an empty room, and never on the last one. */
+  deleteGenre: (id: string) => req<void>(`/api/genres/${id}`, { method: "DELETE" }),
   upload: (file: File, target: { genreId?: string; newGenre?: string; theme?: string }) => {
     const form = new FormData();
     form.append("file", file);

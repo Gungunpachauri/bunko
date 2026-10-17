@@ -314,6 +314,13 @@ svg .sway, svg .sway-slow, svg .swish, svg .float { transform-box: view-box; }
   .time-pill { top: auto; bottom: 14px; left: 16px; transform: none; }
   .rail { display: none; }
   .chapter { bottom: 64px; }
+  /* Phones: the themes sit on one row you can swipe, next to the name, instead of wrapping onto two. */
+  .topbar { gap: 10px; }
+  .theme-pills { flex: 1; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .theme-pills::-webkit-scrollbar { display: none; }
+  .pill { flex: none; padding: 6px 12px; font-size: 13px; }
+  /* The "Enter the library" button already says where to go, and the hint would sit on the clock. */
+  .scroll-hint { display: none; }
 }
 
 /* ── Library over time ──────────────────────────────────────────────── */

@@ -83,3 +83,13 @@ def test_delete_book_removes_it(client, files):
     book_id = upload(client, files["epub"], genre_id="fiction").json()["id"]
     assert client.delete(f"/api/books/{book_id}").status_code == 204
     assert client.get(f"/api/books/{book_id}").status_code == 404
+
+
+def test_empty_rooms_can_be_removed(client, files):
+    room = client.post("/api/genres", json={"title": "Test Room"}).json()["id"]
+    book_id = upload(client, files["epub"], genre_id=room).json()["id"]
+    assert client.delete(f"/api/genres/{room}").status_code == 409  # still has a book
+    client.delete(f"/api/books/{book_id}")
+    assert client.delete(f"/api/genres/{room}").status_code == 204
+    assert client.delete("/api/genres/nope").status_code == 404
+
