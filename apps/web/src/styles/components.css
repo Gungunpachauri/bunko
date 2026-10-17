@@ -1,4 +1,4 @@
-/* ── Phase 2: loading, palette, upload, reader ──────────────────────── */
+/* ── Loading screen, search palette, upload dialog ──────────────────── */
 .loading-screen { display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #2a2233, #0b0a10); }
 .loading-box { max-width: 520px; padding: 28px; text-align: center; color: #f3eedd; font-family: Georgia, serif; }
 .loading-box h1 { font-size: 26px; margin: 0 0 12px; }
@@ -45,7 +45,7 @@ kbd { font: 600 10px/1 var(--font-body); padding: 2px 5px; border-radius: 4px; b
 .job.failed .job-status { color: #c0392b; }
 .job.processing .job-status, .job.uploading .job-status { color: var(--accent); }
 
-/* ── Review highlights (Phase 4) ────────────────────────────────────── */
+/* ── Review highlights ──────────────────────────────────────────────── */
 .chip { position: relative; }
 .chip-badge {
   display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; margin-left: 6px; border-radius: 9px;

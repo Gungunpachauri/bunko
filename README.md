@@ -88,10 +88,20 @@ docker-compose.yml
 
 ```bash
 cd apps/api && .venv/Scripts/python -m pytest      # 34 tests, no API key needed
+cd apps/api && .venv/Scripts/python -m ruff check .  # lint
 cd apps/api && .venv/Scripts/python eval/run_eval.py   # spoiler leaks, citations, recall (needs the API running)
 ```
 
-In the latest evaluation run, spoiler-safe search returned **0 passages past the reader's page** (against 102 without the filter) and found the answer passage in its top 8 for **100%** of answerable questions. See [apps/api/eval/RESULTS.md](apps/api/eval/RESULTS.md).
+18 hand-written questions across 6 books, each asked by a reader stopped partway through, including 4 traps whose answer only appears later in the book. The same questions are asked with Bunko's spoiler-safe search and again without it:
+
+| | Bunko | Without the protection |
+|---|---|---|
+| Answers that spoiled something | **0 / 18** | 3 / 18 |
+| Spoiler traps declined | **4 / 4** | 1 / 4 |
+| Answers backed by the right passage | **100%** | 7% |
+| Answer passage found (top 8) | **100%** | 79% |
+
+Full table: [apps/api/eval/RESULTS.md](apps/api/eval/RESULTS.md).
 
 ## Use it from Claude (MCP)
 

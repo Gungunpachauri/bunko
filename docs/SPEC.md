@@ -1,5 +1,7 @@
 # Bunko: UI Concept
 
+> The original design plan, written before building. For what Bunko does today, see the [README](../README.md).
+
 Oct 15, 2026 · @Gungun
 
 ## Overview

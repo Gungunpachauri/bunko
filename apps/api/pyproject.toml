@@ -1,0 +1,18 @@
+[project]
+name = "bunko-api"
+version = "0.5.0"
+description = "Bunko's backend: books, reading positions, spoiler-safe AI answers, highlights, knowledge graph."
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+extend-exclude = ["data"]
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, warnings, import order, bugbear, modern syntax
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]  # long lines are fine when they read better (prompts, SQL)

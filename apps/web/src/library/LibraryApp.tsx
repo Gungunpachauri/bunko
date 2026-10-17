@@ -33,7 +33,8 @@ const TIMES: { id: TimeOfDay; label: string }[] = [
   { id: "dusk", label: "Golden hour" },
   { id: "night", label: "Night" },
 ];
-export const THEME_KEY = "walkable-library:theme";
+export const THEME_KEY = "bunko:theme";
+const OLD_THEME_KEY = "walkable-library:theme"; // the name before Bunko; still read so the choice carries over
 
 /** A theme id, or "mixed" for one theme per genre. */
 export type Choice = Theme["id"] | "mixed";
@@ -44,7 +45,7 @@ export function initialChoice(): Choice {
   const hash = window.location.hash.replace(/^#\/?/, "");
   if (isChoice(hash)) return hash;
   try {
-    const saved = localStorage.getItem(THEME_KEY);
+    const saved = localStorage.getItem(THEME_KEY) ?? localStorage.getItem(OLD_THEME_KEY);
     if (isChoice(saved)) return saved;
   } catch {
     // storage unavailable

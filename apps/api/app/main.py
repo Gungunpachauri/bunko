@@ -1,14 +1,13 @@
 import logging
+import threading
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from . import graph
 from .config import settings
 from .db import init_db
-import threading
-
-from . import graph
 from .routes import ask, books, highlights, library
 from .routes import graph as graph_routes
 

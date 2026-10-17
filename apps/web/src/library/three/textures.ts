@@ -1,4 +1,4 @@
-// Canvas-drawn placeholder covers, spines and pages, one style per theme.
+// Canvas-drawn covers, spines and pages, one style per theme (used when a book has no cover of its own).
 import type { Book } from "@/library/data/books";
 import type { Theme } from "@/library/themes/types";
 import { shade } from "@/library/themes/art";
@@ -350,7 +350,7 @@ export function pageCanvas(book: Book, theme: Theme) {
   centered(ctx, t.lines, COVER_W / 2, 170, t.size * 1.1);
   ctx.fillStyle = "#3a2e2655";
   ctx.fillRect(COVER_W / 2 - 40, 200 + t.lines.length * t.size, 80, 2);
-  // placeholder text lines
+  // lines that suggest text on the page
   let s = seedOf(book);
   const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
   for (let i = 0; i < 17; i++) {

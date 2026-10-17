@@ -1,4 +1,4 @@
-"""Phase 3: hybrid retrieval, spoiler-safe windows, cited answers over SSE, and the leak check."""
+"""Hybrid retrieval, spoiler-safe windows, cited answers over SSE, and the leak check."""
 
 import json
 
@@ -70,8 +70,9 @@ def test_library_question_spans_books(client, files):
 def test_leak_check_flags_names_from_later_chapters(client, files):
     book_id = upload(client, files["epub"], genre_id="fiction").json()["id"]
     with SessionLocal() as s:
-        from app.models import Chunk
         from sqlalchemy import select
+
+        from app.models import Chunk
 
         whale_at = s.scalar(select(Chunk.char_start).where(Chunk.book_id == book_id, Chunk.text.like("%white whale%")))
         # "Nobody" opens chapter II; the reader stopped before it.

@@ -1,6 +1,6 @@
 # One command to run everything:  docker compose up --build
 # Then open http://localhost:3000  (API at http://localhost:8010/docs)
-# AI keys are read from apps/api/.env (copy apps/api/.env.example). Neo4j joins in Phase 4.
+# AI keys are read from apps/api/.env (copy apps/api/.env.example).
 # Only the web app and the API are published on the host, so this stack can run next to other projects
 # that use the usual Postgres/Redis/Qdrant ports.
 

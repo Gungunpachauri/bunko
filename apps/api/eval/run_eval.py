@@ -110,9 +110,9 @@ def summarise(rows: list[dict]) -> dict:
         "invalid citations": sum(x["invalid_citations"] for x in s),
         "past-position hits": sum(x["past_position"] for x in s),
         "answer leak rate": pct(leaked),
-        "leaks flagged": f"{sum(x['leak_flagged'] for x in s)}/{sum(leaked)}",
+        "leaks flagged": f"{sum(x['leak_flagged'] for x in s)}/{sum(leaked)}" if sum(leaked) else "none to flag",
         "trap abstention": pct([x["abstained"] for x in s]),
-        "median seconds": statistics.median(r["result"]["seconds"] for r in rows),
+        "median seconds": round(statistics.median(r["result"]["seconds"] for r in rows), 1),
     }
 
 
@@ -181,12 +181,17 @@ def write_markdown(report: dict, stamp: str) -> None:
         "# Evaluation results", "",
         f"Run {report['when']} · LLM: {report['llm']['provider']} {report['llm']['model'] or ''} · "
         f"embeddings {report['llm']['embed_model']} · reranker {report['llm']['rerank_model']}", "",
-        "Questions: `eval/questions.json`. Raw answers: `eval/results/" + stamp + ".json`.", "",
+        "Questions: `eval/questions.json`. Each question is asked as a reader who has reached a set point in the book, "
+        "once with spoiler-safe search (the app) and once without the reading-position filter (baseline). "
+        "Full answers are saved locally in `eval/results/` (not committed).", "",
         "| Metric | " + " | ".join(names[m] for m in modes) + " |",
         "|---|" + "---|" * len(modes),
     ]
     for k in keys:
-        lines.append(f"| {k} | " + " | ".join(str(report["modes"][m]["summary"][k]) for m in modes) + " |")
+        # With spoilers allowed (the baseline) the leak check is switched off, so it has nothing to report there.
+        cells = ["off (spoilers allowed)" if (k == "leaks flagged" and m == "open") else str(report["modes"][m]["summary"][k])
+                 for m in modes]
+        lines.append(f"| {k} | " + " | ".join(cells) + " |")
     lines += ["", "## Per question", "", "| Question | " + " | ".join(modes) + " |", "|---|" + "---|" * len(modes)]
     for i, row in enumerate(report["modes"][modes[0]]["rows"]):
         cells = []

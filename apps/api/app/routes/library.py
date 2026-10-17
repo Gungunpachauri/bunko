@@ -72,7 +72,7 @@ def _snippet(text: str, q: str, width: int = 180) -> str:
 
 @router.get("/search", response_model=SearchOut)
 def search(db: Db, q: Annotated[str, Query(min_length=1, max_length=200)], limit: int = 8) -> SearchOut:
-    """Ctrl+K: titles, authors, genres and passages. Plain text matching for now; Phase 3 adds semantic search."""
+    """Ctrl+K: titles, authors, genres and passages by exact words (instant). Search by meaning is /api/retrieve and Ask."""
     term = f"%{q.strip()}%"
     books = db.scalars(
         select(Book).options(selectinload(Book.position))

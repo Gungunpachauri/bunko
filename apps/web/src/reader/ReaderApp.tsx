@@ -19,13 +19,14 @@ import { PdfView } from "@/reader/PdfView";
 import { cleanChapter, FONTS, READING, type FontChoice, type Light } from "@/reader/skins";
 import type { ReaderHandle, ReaderLocation, ReaderSelection, TocItem } from "@/reader/types";
 
-const PREFS_KEY = "walkable-library:reader";
+const PREFS_KEY = "bunko:reader";
+const OLD_PREFS_KEY = "walkable-library:reader"; // the name before Bunko; still read so settings carry over
 interface Prefs { light: Light | null; font: FontChoice; size: number; layout: "auto" | "one" | "two" }
 const DEFAULT_PREFS: Prefs = { light: null, font: "garamond", size: 1, layout: "auto" };
 
 function loadPrefs(): Prefs {
   try {
-    return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}") };
+    return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? localStorage.getItem(OLD_PREFS_KEY) ?? "{}") };
   } catch {
     return DEFAULT_PREFS;
   }

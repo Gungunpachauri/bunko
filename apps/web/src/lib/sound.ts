@@ -13,7 +13,8 @@
 export type AmbienceId = "japanese" | "chinese" | "vedic" | "space" | "fantasy";
 export type Effect = "page" | "open" | "close" | "chime";
 
-const KEY = "walkable-library:sound";
+const KEY = "bunko:sound";
+const OLD_KEY = "walkable-library:sound"; // the name before Bunko; still read so the setting carries over
 const PENTATONIC = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66]; // C D E G A (C6…)
 
 class SoundEngine {
@@ -27,7 +28,7 @@ class SoundEngine {
 
   constructor() {
     if (typeof window !== "undefined") {
-      try { this.enabled = localStorage.getItem(KEY) === "on"; } catch { /* storage unavailable */ }
+      try { this.enabled = (localStorage.getItem(KEY) ?? localStorage.getItem(OLD_KEY)) === "on"; } catch { /* storage unavailable */ }
       // Browsers start audio only after a user gesture: wake up on the first click if sound was left on.
       const wake = () => { if (this.enabled) this.start(); window.removeEventListener("pointerdown", wake); };
       window.addEventListener("pointerdown", wake);

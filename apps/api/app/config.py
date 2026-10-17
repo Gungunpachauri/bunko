@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000"]
     max_upload_mb: int = 200
 
-    # --- AI core (Phase 3) ---
+    # --- AI: search, answers, discussion partner, knowledge graph ---
     # Qdrant server URL; empty → an embedded Qdrant stored under data_dir (no server needed).
     qdrant_url: str | None = None
     rag_collection_prefix: str = "passages"

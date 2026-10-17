@@ -1,4 +1,4 @@
-"""Phase 4: the MCP server's tools, routed through the test app instead of a running API."""
+"""The MCP server's tools, routed through the test app instead of a running API."""
 
 import pytest
 from mcp.server.mcpserver.exceptions import ToolError

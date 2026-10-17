@@ -1,4 +1,4 @@
-"""Phase 4: the discussion partner (LangGraph pipeline + one streamed LLM call per turn) with a stand-in model."""
+"""The discussion partner (LangGraph pipeline + one streamed LLM call per turn) with a stand-in model."""
 
 import json
 

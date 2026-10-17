@@ -1,4 +1,4 @@
-"""Phase 4: highlights and notes, meaning-based highlight search, and FSRS review."""
+"""Highlights and notes, meaning-based highlight search, and FSRS review."""
 
 from datetime import UTC, datetime, timedelta
 

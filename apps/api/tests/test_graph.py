@@ -1,4 +1,4 @@
-"""Phase 4: the knowledge graph (with a stand-in model): extraction, cross-book ideas, spoilers, comparisons."""
+"""The knowledge graph (with a stand-in model): extraction, cross-book ideas, spoilers, comparisons."""
 
 import pytest
 

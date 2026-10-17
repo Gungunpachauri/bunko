@@ -33,5 +33,5 @@ def test_chunks_stay_inside_sections_and_track_offsets():
     assert len(passages[0].text) >= TARGET_CHARS
     # Offsets are contiguous across the whole book.
     assert passages[0].char_start == 0
-    assert all(a.char_end == b.char_start for a, b in zip(passages, passages[1:]))
+    assert all(a.char_end == b.char_start for a, b in zip(passages, passages[1:], strict=False))
     assert passages[-1].char_end == total

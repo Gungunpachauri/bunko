@@ -12,13 +12,14 @@ redis>=5.2
 rq>=2.1
 psycopg[binary]>=3.2
 pytest>=8.3
-# AI core (Phase 3)
+ruff>=0.6
+# AI: search index, local embedding/reranking models, LLM clients
 qdrant-client>=1.15
 fastembed>=0.7
 anthropic>=0.60
 # Windows only: onnxruntime needs the VC++ runtime, which this puts inside the virtualenv.
 msvc-runtime; sys_platform == "win32"
 fsrs>=6
-# Phase 4: MCP server and the discussion partner
+# MCP server, discussion partner (LangGraph), spaced repetition
 mcp>=2.3
 langgraph>=0.6

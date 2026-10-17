@@ -1,6 +1,6 @@
 // Small drawing helpers shared by the theme skins.
 
-/** Deterministic pseudo-random generator so placeholder art is stable. */
+/** Deterministic pseudo-random generator, so the drawn theme art looks the same on every visit. */
 export function rng(seed: number) {
   let s = seed >>> 0;
   return () => {

@@ -12,7 +12,7 @@ def _now() -> datetime:
 
 
 class Genre(Base):
-    """A genre is a room in the walkable library."""
+    """A genre is a room in the 3D library."""
 
     __tablename__ = "genres"
 

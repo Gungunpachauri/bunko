@@ -144,7 +144,7 @@ export const api = {
   coverUrl: (id: string) => `${API_URL}/api/books/${id}/cover`,
 };
 
-// ── Ask (Phase 3): answers stream over Server-Sent Events ─────────────────
+// ── Ask: answers stream over Server-Sent Events ────────────────────────
 
 export interface ApiCitation {
   n: number;
