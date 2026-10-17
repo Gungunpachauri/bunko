@@ -2,6 +2,12 @@
 
 **A library you can walk into, read in, and talk to, and it never spoils the ending.**
 
+<p align="center">
+  <img src="docs/media/bunko.gif" alt="Walking through the Bunko library, asking a spoiler-free question with cited answers, and turning the reading map" width="720">
+  <br>
+  <sub>Walk the rooms &nbsp;·&nbsp; ask with citations, no spoilers &nbsp;·&nbsp; see how your books connect</sub>
+</p>
+
 Bunko turns your bookshelf into a place. Every genre becomes a room in a 3D world: a lantern-lit Japanese tea house, a Vedic ashram under a banyan tree, a library station orbiting a black hole. Take a book off the shelf and it floats down and opens into a reading room that matches its world.
 
 Then the clever part. Ask *"why does Elizabeth dislike Darcy?"* and Bunko answers from **your** book, quotes the exact lines, and opens the page when you click a citation. It only knows what you've read so far: no twists, no endings, no "well, actually, in chapter 40…". Finish a chapter and a reading partner asks what you thought, and pushes back with quotes when it disagrees. Highlight a line and it comes back days later, just before you'd forget it. Every idea you meet joins a star map that shows which of your books are secretly talking to each other.
@@ -80,6 +86,7 @@ apps/
       lib/                API client, sound engine
       styles/             CSS by area
 docs/SPEC.md              the original design spec
+docs/media/               the demo GIF
 prototypes/theme-demos/   Phase 1 theme prototypes (Vite)
 docker-compose.yml
 ```
