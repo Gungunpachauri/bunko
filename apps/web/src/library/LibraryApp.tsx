@@ -211,12 +211,11 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
   useEffect(() => {
     if (!timeline && !holding.current) setMonth(today);
   }, [today, timeline, holdRise]);
-  // Visitors to the public demo get a short note about what they can do, shown once for a few seconds.
+  // Visitors to a live public demo get a short note about what they can do, shown once for a few seconds.
+  // (The showcase says it with a two-word tag under its badge instead.)
   const [greeted, setGreeted] = useState(false);
-  const greeting = access.known && access.visitor && access.demo && !greeted
-    ? STATIC_DEMO
-      ? "Showcase demo: walk the rooms, open any book and try the suggested questions. The answers were recorded from the real AI."
-      : `Public demo: walk the rooms, read any book and ask the AI${access.ask_limit ? ` (${access.ask_limit} questions a day)` : ""}. Adding books is turned off.`
+  const greeting = access.known && access.visitor && access.demo && !greeted && !STATIC_DEMO
+    ? `Public demo: walk the rooms, read any book and ask the AI${access.ask_limit ? ` (${access.ask_limit} questions a day)` : ""}. Adding books is turned off.`
     : null;
   useEffect(() => {
     if (!greeting) return;
@@ -467,12 +466,6 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
           <span className="brand-name">Bunko</span>
           <span className="brand-sub"><span lang="ja">文庫</span> · Your reading world</span>
         </div>
-        {STATIC_DEMO && (
-          <a className="demo-pill" href="https://github.com/Gungunpachauri/bunko" target="_blank" rel="noreferrer"
-            title="This showcase replays answers recorded from the real AI. The code and how to run it live are on GitHub.">
-            Showcase <span aria-hidden>↗</span>
-          </a>
-        )}
         <nav className="theme-pills" aria-label="Themes">
           {THEMES.map((t, i) => (
             <button key={t.id} className={`pill ${t.id === choice ? "on" : ""}`} onClick={() => { window.location.hash = `/${t.id}`; }} title={`${t.tagline} (key ${i + 1})`}>
@@ -514,6 +507,8 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
         </div>
       </header>
 
+      {/* The showcase flashes two words once: its answers are replays, recorded from the real AI. */}
+      {STATIC_DEMO && <span className="demo-hint" role="status">Recorded answers</span>}
       <button className="time-pill" onClick={cycleTime} title="Change the time of day">
         <span className="time-dot" />
         {clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · {timeLabel}
