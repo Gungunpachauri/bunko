@@ -27,6 +27,7 @@ kbd { font: 600 10px/1 var(--font-body); padding: 2px 5px; border-radius: 4px; b
 .palette-title.passage { font-weight: 400; font-style: italic; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .palette-sub { font-size: 12px; color: var(--muted); }
 .palette-empty { padding: 18px; color: var(--muted); font-size: 14px; text-align: center; }
+@media (hover: none) { .palette-foot { display: none !important; } }
 .palette-foot { display: flex; gap: 16px; justify-content: flex-end; padding: 8px 14px; font-size: 11px; color: var(--muted); border-top: 1px solid color-mix(in srgb, var(--card-edge) 40%, transparent); }
 
 .upload { width: min(520px, 100%); padding: 22px 24px; border-radius: 18px; background: var(--card-bg); color: var(--ink); border: 1px solid var(--card-edge); box-shadow: 0 30px 80px #000c; font-family: var(--font-body); position: relative; }
@@ -240,7 +241,7 @@ kbd { font: 600 10px/1 var(--font-body); padding: 2px 5px; border-radius: 4px; b
 .map-label { transition: opacity 0.2s; }
 .map-label.off { opacity: 0; }
 @media (max-width: 760px) {
-  .map-panel { top: auto; height: 46vh; }
+  .map-panel { top: auto; height: 38dvh; }
 }
 
 /* Sound toggle */

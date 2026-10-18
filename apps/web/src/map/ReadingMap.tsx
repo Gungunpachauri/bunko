@@ -124,7 +124,7 @@ export default function ReadingMap() {
           <>
             <p className="map-muted">
               Bright stars are books, small ones are ideas. White ideas appear in more than one book.
-              Drag to turn the sky, scroll to zoom, click a star.
+              Drag to turn the sky, zoom in, and pick a star.
             </p>
             <div className="map-stats">
               <div><b>{data.books.length - unmapped.length}</b><span>books mapped</span></div>

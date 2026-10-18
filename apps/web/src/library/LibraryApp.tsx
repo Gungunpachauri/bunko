@@ -130,6 +130,7 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
   const [clock, setClock] = useState(() => new Date());
   const [toast, setToast] = useState<string | null>(null);
   const reduced = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
+  const touch = useMemo(() => window.matchMedia("(hover: none)").matches, []); // phones have no Ctrl K
   // Live objects shared with the 3D scene, which reads and moves them every frame (created once, never replaced).
   const [journey] = useState<JourneyState>(() => ({ p: 0, target: 0, locked: false }));
   const [registry] = useState(() => new Map<string, () => void>());
@@ -372,8 +373,8 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
     switch (ch.kind) {
       case "gate":
         return mixed
-          ? { eyebrow: "Bunko · Mixed", title: "The Library of Many Worlds", body: "Every genre is built in its own culture. Cross the bridges to travel from one world to the next, or press Ctrl K to jump anywhere." }
-          : { eyebrow: `Bunko · ${theme.name}`, title: theme.entrance.title, body: `${theme.tagline}. Press Ctrl K to jump straight to any book.` };
+          ? { eyebrow: "Bunko · Mixed", title: "The Library of Many Worlds", body: `Every genre is built in its own culture. Cross the bridges to travel from one world to the next, ${touch ? "or tap search" : "or press Ctrl K"} to jump anywhere.` }
+          : { eyebrow: `Bunko · ${theme.name}`, title: theme.entrance.title, body: `${theme.tagline}. ${touch ? "Tap search" : "Press Ctrl K"} to jump straight to any book.` };
       case "room": {
         const s = roomStats(library, ch.genre.id);
         const t = roomText(themeFor(ch.genre.id), ch.genre);
@@ -507,8 +508,8 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
         </div>
       </header>
 
-      {/* The showcase flashes two words once: its answers are replays, recorded from the real AI. */}
-      {STATIC_DEMO && <span className="demo-hint" role="status">Recorded answers</span>}
+      {/* The showcase flashes two words once: it shows the interface and the idea, not a live service. */}
+      {STATIC_DEMO && <span className="demo-hint" role="status">UI preview</span>}
       <button className="time-pill" onClick={cycleTime} title="Change the time of day">
         <span className="time-dot" />
         {clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · {timeLabel}

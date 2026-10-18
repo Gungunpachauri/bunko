@@ -19,7 +19,6 @@ button:disabled { cursor: default; }
 .layer { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
 .layer svg { display: block; }
 .layer.front { pointer-events: none; }
-.room { position: absolute; top: 0; height: 900px; }
 .room-art { position: absolute; left: 0; top: -500px; pointer-events: none; }
 .threshold { position: absolute; top: -500px; transform: translateX(-150px); pointer-events: none; }
 .floor-shadow { position: absolute; left: 0; height: 120px; background: linear-gradient(#0000, #0003); pointer-events: none; }
@@ -120,6 +119,7 @@ button:disabled { cursor: default; }
   color: #fff; background: #0b0a12b0; backdrop-filter: blur(8px); border: 1px solid #ffffff22;
   opacity: 0; animation: demo-hint 1.6s ease 2.5s both;
 }
+@media (max-width: 760px) { .demo-hint { top: 112px; } }
 @keyframes demo-hint { 0% { opacity: 0; } 20%, 75% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
 .theme-pills { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--chip-bg); backdrop-filter: blur(8px); flex-wrap: wrap; }
 .pill { border: 0; background: transparent; color: var(--chip-ink); padding: 6px 14px; border-radius: 999px; font-size: 14px; opacity: 0.8; }
@@ -321,10 +321,18 @@ svg .sway, svg .sway-slow, svg .swish, svg .float { transform-box: view-box; }
 @media (max-width: 760px) {
   .time-pill { top: auto; bottom: 14px; left: 16px; transform: none; }
   .rail { display: none; }
-  .chapter { bottom: 64px; }
-  /* Phones: the themes sit on one row you can swipe, next to the name, instead of wrapping onto two. */
-  .topbar { gap: 10px; }
-  .theme-pills { flex: 1; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  /* Phones: the page text sits above the clock and the librarian, never under them. */
+  .chapter { left: 16px; right: 16px; max-width: none; bottom: 108px; }
+  .chapter-title { font-size: clamp(36px, 11vw, 52px); }
+  .chapter-actions { flex-wrap: wrap; }
+  .world .librarian { right: 10px; bottom: 8px; }
+  .librarian-btn { zoom: 0.72; }
+  .librarian-chat { height: min(580px, calc(100dvh - 230px)); }
+  /* Phones: name and tools on the first row; the themes get a full row of their own below, swipeable. */
+  .topbar { gap: 8px 10px; padding: 10px 12px; }
+  .top-actions { margin-left: auto; gap: 6px; }
+  .theme-pills { order: 3; flex: 1 1 100%; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .toast { top: 116px; }
   .theme-pills::-webkit-scrollbar { display: none; }
   .pill { flex: none; padding: 6px 12px; font-size: 13px; }
   /* The "Enter the library" button already says where to go, and the hint would sit on the clock. */
