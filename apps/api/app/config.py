@@ -24,7 +24,17 @@ class Settings(BaseSettings):
     # When set, ingestion runs in an RQ worker; otherwise in a background thread of the API.
     redis_url: str | None = None
     cors_origins: list[str] = ["http://localhost:3000"]
+    # Extra allowed origins as a pattern, e.g. https://bunko.*\.vercel\.app for Vercel preview links.
+    cors_origin_regex: str | None = None
     max_upload_mb: int = 200
+
+    # --- Public demo ---
+    # When set, only requests carrying this key (header X-Admin-Key) may add, change or remove anything;
+    # visitors can still walk, read, search and ask. Empty → everything is open (running it yourself).
+    admin_key: str | None = None
+    # Questions one visitor may ask per day, and all visitors together (0 = no limit). Protects free AI quotas.
+    ask_limit_per_visitor: int = 0
+    ask_limit_total: int = 0
 
     # --- AI: search, answers, discussion partner, knowledge graph ---
     # Qdrant server URL; empty → an embedded Qdrant stored under data_dir (no server needed).

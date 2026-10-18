@@ -1,0 +1,1 @@
+{"provider":"gemini","model":"gemini-flash-latest","backup":"groq","embed_model":"snowflake/snowflake-arctic-embed-xs","rerank_model":"jinaai/jina-reranker-v1-turbo-en","books":16,"indexed":16,"indexing":{}}

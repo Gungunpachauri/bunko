@@ -1,4 +1,6 @@
-// Thin client for the FastAPI backend.
+// Thin client for the FastAPI backend. The showcase build answers from exported files instead (see lib/demo.ts).
+
+import { demoAsk, demoRequest, demoUrls, STATIC_DEMO } from "@/lib/demo";
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8010").replace(/\/$/, "");
 
@@ -90,8 +92,40 @@ export interface ApiTocEntry {
   page: number;
 }
 
+const ADMIN_KEY = "bunko:admin-key";
+
+/**
+ * The owner's key for a public demo. Open the site once with ?admin=YOUR_KEY and this browser remembers it
+ * (?admin= with nothing after it forgets it). Visitors have none, so the server lets them read and ask only.
+ */
+function adminKey(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const given = new URLSearchParams(window.location.search).get("admin");
+    if (given !== null) {
+      if (given) localStorage.setItem(ADMIN_KEY, given);
+      else localStorage.removeItem(ADMIN_KEY);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("admin");
+      window.history.replaceState(window.history.state, "", url.toString());
+    }
+    return localStorage.getItem(ADMIN_KEY);
+  } catch {
+    return null; // storage unavailable
+  }
+}
+
+function withKey(init?: RequestInit): RequestInit {
+  const key = adminKey();
+  if (!key) return init ?? {};
+  const headers = new Headers(init?.headers);
+  headers.set("X-Admin-Key", key);
+  return { ...init, headers };
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, init);
+  if (STATIC_DEMO) return demoRequest(path, init) as Promise<T>;
+  const res = await fetch(`${API_URL}${path}`, withKey(init));
   if (!res.ok) {
     let detail = res.statusText;
     try {
@@ -104,7 +138,11 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   return (res.status === 204 ? undefined : await res.json()) as T;
 }
 
+/** What this browser may do: visitors to a public demo read and ask; the owner (with the key) does everything. */
+export interface ApiAccess { visitor: boolean; demo: boolean; asks_left: number | null; ask_limit: number | null }
+
 export const api = {
+  access: () => req<ApiAccess>("/api/access"),
   library: () => req<{ genres: ApiGenre[]; books: ApiBook[] }>("/api/library"),
   book: (id: string) => req<ApiBook>(`/api/books/${id}`),
   toc: (id: string) => req<ApiTocEntry[]>(`/api/books/${id}/toc`),
@@ -142,8 +180,8 @@ export const api = {
   buildAllConnections: () => req<{ queued: number }>("/api/graph/build-all", { method: "POST" }),
   passage: (chunkId: number) => req<ApiCitation>(`/api/passages/${chunkId}`),
   ragStatus: () => req<ApiRagStatus>("/api/rag/status"),
-  fileUrl: (id: string) => `${API_URL}/api/books/${id}/file`,
-  coverUrl: (id: string) => `${API_URL}/api/books/${id}/cover`,
+  fileUrl: (id: string) => (STATIC_DEMO ? demoUrls.file(id) : `${API_URL}/api/books/${id}/file`),
+  coverUrl: (id: string) => (STATIC_DEMO ? demoUrls.cover(id) : `${API_URL}/api/books/${id}/cover`),
 };
 
 // ── Ask: answers stream over Server-Sent Events ────────────────────────
@@ -192,9 +230,10 @@ export type ReaderSpot = { chapter_href?: string | null; chapter_fraction?: numb
 
 /** POST a question and dispatch the streamed events. Resolves when the answer is complete. */
 export async function askStream(path: string, body: object, h: AskHandlers, signal?: AbortSignal): Promise<void> {
+  if (STATIC_DEMO) return demoAsk(path, body, h, signal);
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
+    res = await fetch(`${API_URL}${path}`, withKey({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal }));
   } catch (e) {
     if ((e as Error).name !== "AbortError") h.onError?.("Couldn't reach the library server.");
     return;

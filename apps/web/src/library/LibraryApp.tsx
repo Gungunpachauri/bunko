@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { API_URL, api, type ApiBook } from "@/lib/api";
+import { useAccess } from "@/lib/access";
+import { STATIC_DEMO } from "@/lib/demo";
 import type { Book } from "@/library/data/books";
 import type { Genre } from "@/library/data/genres";
 import { todayOf, useLibrary, type Library } from "@/library/data/library";
@@ -108,6 +110,9 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
   // Ask / Discuss about the open book, right here in the library (it takes the card's place).
   const [bookChat, setBookChat] = useState<{ bookId: string; mode: BookChatMode } | null>(null);
   const [due, setDue] = useState(0);
+  // On the public demo, visitors walk, read and ask; adding, removing and reviewing are the owner's.
+  const access = useAccess();
+  const visitor = access.visitor;
   const refreshDue = useCallback(() => { api.reviewStats().then((st) => setDue(st.due)).catch(() => {}); }, []);
   useEffect(() => {
     refreshDue();
@@ -206,6 +211,18 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
   useEffect(() => {
     if (!timeline && !holding.current) setMonth(today);
   }, [today, timeline, holdRise]);
+  // Visitors to the public demo get a short note about what they can do, shown once for a few seconds.
+  const [greeted, setGreeted] = useState(false);
+  const greeting = access.known && access.visitor && access.demo && !greeted
+    ? STATIC_DEMO
+      ? "Showcase demo: walk the rooms, open any book and try the suggested questions. The answers were recorded from the real AI."
+      : `Public demo: walk the rooms, read any book and ask the AI${access.ask_limit ? ` (${access.ask_limit} questions a day)` : ""}. Adding books is turned off.`
+    : null;
+  useEffect(() => {
+    if (!greeting) return;
+    const id = window.setTimeout(() => setGreeted(true), 14000); // long enough to outlast the 3D scene loading
+    return () => window.clearTimeout(id);
+  }, [greeting]);
   useEffect(() => {
     if (!toast) return;
     const id = window.setTimeout(() => setToast(null), 5200);
@@ -430,7 +447,7 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
           <BookCard key={open.book.id} book={open.book} theme={bookTheme} onClose={close}
             onRead={(panel) => (panel ? setBookChat({ bookId: open.book.id, mode: panel }) : openBook(open.book.id))}
             onConnections={() => setConnectionsFor({ id: open.book.id, title: open.book.title })}
-            onRemove={async () => {
+            onRemove={visitor ? undefined : async () => {
               const title = open.book.title;
               try {
                 await api.deleteBook(open.book.id);
@@ -450,6 +467,12 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
           <span className="brand-name">Bunko</span>
           <span className="brand-sub"><span lang="ja">文庫</span> · Your reading world</span>
         </div>
+        {STATIC_DEMO && (
+          <a className="demo-pill" href="https://github.com/Gungunpachauri/bunko" target="_blank" rel="noreferrer"
+            title="This showcase replays answers recorded from the real AI. The code and how to run it live are on GitHub.">
+            Showcase <span aria-hidden>↗</span>
+          </a>
+        )}
         <nav className="theme-pills" aria-label="Themes">
           {THEMES.map((t, i) => (
             <button key={t.id} className={`pill ${t.id === choice ? "on" : ""}`} onClick={() => { window.location.hash = `/${t.id}`; }} title={`${t.tagline} (key ${i + 1})`}>
@@ -468,17 +491,21 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
             <button className="tool" onClick={() => router.push("/map")} disabled={!!open} title="Reading map: your books and ideas as stars">
               <IconMap /><span className="tool-label">Map</span>
             </button>
-            <button className="tool" onClick={() => setReviewOpen(true)} disabled={!!open} title={due ? `Review highlights (${due} due)` : "Review your highlights"}>
-              <IconReview /><span className="tool-label">Review</span>{due > 0 && <i className="tool-badge">{due}</i>}
-            </button>
+            {!visitor && (
+              <button className="tool" onClick={() => setReviewOpen(true)} disabled={!!open} title={due ? `Review highlights (${due} due)` : "Review your highlights"}>
+                <IconReview /><span className="tool-label">Review</span>{due > 0 && <i className="tool-badge">{due}</i>}
+              </button>
+            )}
             <button className={`tool ${timeline ? "on" : ""}`} onClick={timeline ? closeTimeline : openTimeline} disabled={!!open}
               title={timeline ? "Back to today" : "Library over time"}>
               <IconTimeline /><span className="tool-label">{timeline ? "Today" : "Timeline"}</span>
             </button>
             <span className="tool-sep" aria-hidden />
-            <button className="tool icon" onClick={() => { if (timeline) closeTimeline(); setBooksTab("add"); }} disabled={!!open} title="Add or remove books" aria-label="Add or remove books">
-              <IconPlus />
-            </button>
+            {!visitor && (
+              <button className="tool icon" onClick={() => { if (timeline) closeTimeline(); setBooksTab("add"); }} disabled={!!open} title="Add or remove books" aria-label="Add or remove books">
+                <IconPlus />
+              </button>
+            )}
             <SoundToggle className="tool icon" />
           </nav>
           <button className="primary-btn" onClick={continueReading} disabled={!!open || timeline} title="Open the book you were last reading">
@@ -493,9 +520,9 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
       </button>
 
       <AnimatePresence>
-        {toast && (
-          <motion.div className="toast" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-            {toast}
+        {(toast ?? greeting) && (
+          <motion.div key={toast ?? "greeting"} className="toast" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
+            {toast ?? greeting}
           </motion.div>
         )}
       </AnimatePresence>
@@ -514,14 +541,14 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
             <h1 className="chapter-title">{hud.title}</h1>
             <p className="chapter-body">{hud.body}</p>
             {ch.kind === "gate" && <button className="enter-btn" onClick={() => goTo(1)}>Enter the library</button>}
-            {ch.kind === "room" && roomStats(library, ch.genre.id).total === 0 && (
+            {ch.kind === "room" && !visitor && roomStats(library, ch.genre.id).total === 0 && (
               <button className="enter-btn" onClick={() => setBooksTab("add")}>＋ Add books</button>
             )}
             {ch.kind === "overlook" && (
               <div className="chapter-actions">
                 <button className="enter-btn" onClick={continueReading}>Continue reading</button>
                 <button className="chip" onClick={() => goTo(0)}>Back to the gate</button>
-                <button className="chip" onClick={() => setBooksTab("add")}>＋ Add books</button>
+                {!visitor && <button className="chip" onClick={() => setBooksTab("add")}>＋ Add books</button>}
               </div>
             )}
           </motion.section>
@@ -568,7 +595,7 @@ function LibraryWorld({ library, rawBooks, refresh }: { library: Library & { tod
           { id: "map", title: "✧ Reading map", sub: "Your books and their ideas as a star map" },
           { id: "review", title: "✎ Review highlights", sub: due ? `${due} due now` : "Search and review what you highlighted" },
           { id: "overlook", title: "◎ Overlook", sub: "See the whole library from above" },
-        ]}
+        ].filter((a) => !visitor || !["upload", "manage", "review"].includes(a.id))}
         onOpenBook={openBook}
         onGoToRoom={goToRoom}
         onAction={(id) => {

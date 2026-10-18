@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api, type ApiCitation, type ApiRagStatus, type AskHandlers, type AskMeta, type AskTurn } from "@/lib/api";
+import { STATIC_DEMO } from "@/lib/demo";
 
 interface Message {
   role: "user" | "assistant";
@@ -163,6 +164,8 @@ export function AskPanel({ kicker, title, glyph, send, onCite, onClose, suggesti
           ? <>Indexing books for search… {Math.round((indexingNow.done / Math.max(1, indexingNow.total)) * 100)}% of the current book ({status!.indexed}/{status!.books} done)</>
           : provider === "none"
             ? <>Passages only. Add a free Gemini key in <code>apps/api/.env</code> for written answers.</>
+            : STATIC_DEMO
+            ? <>Answers recorded from the real AI ({PROVIDER_NAMES[provider] ?? provider}) and replayed in this showcase.</>
             : <>Answers by {PROVIDER_NAMES[provider] ?? provider}{status?.model ? ` · ${status.model}` : ""}{status?.backup ? `, ${PROVIDER_NAMES[status.backup] ?? status.backup} as backup` : ""}. Only from your books.</>}
       </div>
     </aside>

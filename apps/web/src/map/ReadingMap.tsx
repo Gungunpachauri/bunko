@@ -11,12 +11,14 @@ import { initialChoice } from "@/library/LibraryApp";
 import { loadThemeFonts } from "@/library/three/textures";
 import { getTheme } from "@/library/themes";
 import { sound } from "@/lib/sound";
+import { useAccess } from "@/lib/access";
 import { Detail } from "@/components/ConnectionsDialog";
 import { SoundToggle } from "@/components/SoundToggle";
 import { layoutMap, type MapNode } from "@/map/layout";
 
 /** The reading map: your books as bright stars, their ideas as small ones, lines where books share an idea. */
 export default function ReadingMap() {
+  const { visitor } = useAccess(); // mapping books is the owner's job on the public demo
   const router = useRouter();
   const [data, setData] = useState<ApiReadingMap | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +152,7 @@ export default function ReadingMap() {
                 <li>
                   <b>{unmapped.length} {unmapped.length === 1 ? "book isn't" : "books aren't"} mapped yet</b>
                   {building ? " (mapping now, new stars appear as they're ready)" : ""}: {unmapped.slice(0, 6).map((b) => b.title.split(/[;:(]/)[0].trim()).join(", ")}{unmapped.length > 6 ? "…" : ""}
-                  {!building && <button className="enter-btn map-build" onClick={mapAll}>Map all my books</button>}
+                  {!building && !visitor && <button className="enter-btn map-build" onClick={mapAll}>Map all my books</button>}
                 </li>
               )}
               {lonely.length === 0 && unmapped.length === 0 && <li>No gaps: every idea links at least two books.</li>}

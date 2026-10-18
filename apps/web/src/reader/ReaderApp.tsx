@@ -11,6 +11,7 @@ import { Particles } from "@/library/three/Particles";
 import { coverDataUrl, loadThemeFonts } from "@/library/three/textures";
 import { AskPanel, type AskSend } from "@/components/AskPanel";
 import { sound, type AmbienceId } from "@/lib/sound";
+import { useAccess } from "@/lib/access";
 import { CommandPalette } from "@/components/CommandPalette";
 import { SoundToggle } from "@/components/SoundToggle";
 import { EpubView } from "@/reader/EpubView";
@@ -40,6 +41,27 @@ function clockLight(): Light {
 
 const base = (href: string) => href.split("#")[0].split("/").pop() ?? href;
 
+type Place = { location: string; progress: number };
+const placeKey = (bookId: string) => `bunko:place:${bookId}`;
+
+/** A visitor's place in a book, kept in this browser. */
+function readPlace(bookId: string): Place | null {
+  try {
+    const raw = localStorage.getItem(placeKey(bookId));
+    return raw ? (JSON.parse(raw) as Place) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writePlace(bookId: string, place: Place) {
+  try {
+    localStorage.setItem(placeKey(bookId), JSON.stringify(place));
+  } catch {
+    // storage unavailable: the place just isn't remembered
+  }
+}
+
 export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startPanel }: {
   bookId: string; jumpTo?: string; passageId?: number;
   /** Open with the Ask or Discuss panel showing (from the book card in the library). */
@@ -60,6 +82,11 @@ export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startP
   const [askSeed, setAskSeed] = useState<{ id: number; text: string } | undefined>(undefined);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [saved, setSaved] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  // On the public demo a visitor's place is kept in their own browser (the server's is the owner's),
+  // and it's what their spoiler protection follows.
+  const access = useAccess();
+  const visitor = access.visitor;
+  const [ownPlace] = useState(() => readPlace(bookId));
   const [recent, setRecent] = useState<{ id: string; title: string; author: string; progress: number }[]>([]);
   const [chrome, setChrome] = useState(true);
   const [flip, setFlip] = useState<{ dir: "next" | "prev"; n: number } | null>(null);
@@ -142,6 +169,11 @@ export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startP
     if (awayRef.current) return; // browsing a citation; the bookmark stays where you were
     window.clearTimeout(saveTimer.current);
     saveTimer.current = window.setTimeout(async () => {
+      if (visitor) {
+        writePlace(bookId, { location: l.location, progress: l.progress });
+        setSaved("saved");
+        return;
+      }
       setSaved("saving");
       try {
         await api.savePosition(bookId, {
@@ -153,7 +185,7 @@ export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startP
         setSaved("error");
       }
     }, 700);
-  }, [bookId]);
+  }, [bookId, visitor]);
 
   const turn = useCallback((dir: "next" | "prev") => {
     if (dir === "next" && loc?.atEnd) return;
@@ -201,7 +233,9 @@ export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startP
   }, [loc, chapters]);
   const current = currentIdx >= 0 ? chapters[currentIdx] : null;
 
-  const startAt = jumpTo ?? book?.position?.location;
+  // A visitor without a place of their own starts where the library's reader is (on the showcase, where the
+  // recorded answers were asked).
+  const startAt = jumpTo ?? (visitor ? ownPlace?.location ?? book?.position?.location : book?.position?.location);
 
   // What the reader has seen, for spoiler-safe answers: the end of the visible page.
   const spot = useMemo<ReaderSpot | null>(() => {
@@ -249,7 +283,7 @@ export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startP
     if (!ready || !passageId) return;
     api.passage(passageId).then((c) => c.book_id === bookId && view.current?.showPassage({ location: c.location, page: c.page, text: c.text })).catch(() => {});
   }, [ready, passageId, bookId]);
-  const progress = loc?.progress ?? book?.position?.progress ?? 0;
+  const progress = loc?.progress ?? (visitor ? ownPlace?.progress ?? book?.position?.progress : book?.position?.progress) ?? 0;
   const pct = Math.round(progress * 100);
   const pagesLeft = loc ? Math.max(0, loc.pageTotal - loc.page) : 0;
   const Viewer = book?.format === "pdf" ? PdfView : EpubView;
@@ -335,7 +369,7 @@ export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startP
         </div>
         <div className="room-tools">
           <button className={`room-icon ${panel === "contents" ? "on" : ""}`} onClick={() => setPanel((p) => (p === "contents" ? "none" : "contents"))} title="Contents" disabled={!chapters.length}>☰</button>
-          {book && (
+          {book && !visitor && (
             <button className={`room-icon ${panel === "highlights" ? "on" : ""}`} onClick={() => setPanel((p) => (p === "highlights" ? "none" : "highlights"))} title="Highlights and notes">
               ✎{highlights.length > 0 && <i className="room-badge">{highlights.length}</i>}
             </button>
@@ -355,7 +389,8 @@ export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startP
           <div className="edges left" style={{ width: `${4 + progress * 14}px` }} />
           <div className="pages">
             <div className="paper-grain" />
-            {book && !error && (
+            {/* Waits to know who's reading, since that decides where the book opens. */}
+            {book && access.known && !error && (
               <Viewer
                 ref={view}
                 fileUrl={api.fileUrl(book.id)}
@@ -369,8 +404,8 @@ export default function ReaderApp({ bookId, jumpTo, passageId, openPanel: startP
                 onReady={() => setReady(true)}
                 onError={setError}
                 onKey={onKey}
-                highlights={drawnHighlights}
-                onSelect={(sel) => { setSelection(sel); if (sel) setEditing(null); }}
+                highlights={visitor ? [] : drawnHighlights}
+                onSelect={visitor ? undefined : (sel) => { setSelection(sel); if (sel) setEditing(null); }}
                 onHighlightClick={(id, x, y) => { setSelection(null); setEditing({ id, x, y }); }}
               />
             )}

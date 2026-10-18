@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { api, type ApiCitation, type ApiConcept, type ApiConceptSummary, type ApiConnections } from "@/lib/api";
 import { Prose } from "@/components/AskPanel";
+import { useAccess } from "@/lib/access";
+import { STATIC_DEMO } from "@/lib/demo";
 
 /** A book's ideas and people, the other books that share each idea, and where they agree or differ. */
 export function ConnectionsDialog({ book, onClose }: { book: { id: string; title: string } | null; onClose: () => void }) {
@@ -24,6 +26,7 @@ export function ConnectionsDialog({ book, onClose }: { book: { id: string; title
 }
 
 function Connections({ bookId, title, onClose }: { bookId: string; title: string; onClose: () => void }) {
+  const { visitor } = useAccess(); // mapping books is the owner's job on the public demo
   const [data, setData] = useState<ApiConnections | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<ApiConceptSummary | null>(null);
@@ -75,7 +78,7 @@ function Connections({ bookId, title, onClose }: { bookId: string; title: string
             The AI reads it in short steps in the background (a few minutes). You can close this and come back.
           </p>
           {st?.status === "failed" && <p className="conn-msg error">Last try stopped: {st.error}</p>}
-          <button className="enter-btn" onClick={start}>{st?.status === "failed" ? "Try again" : "Find connections"}</button>
+          {!visitor && <button className="enter-btn" onClick={start}>{st?.status === "failed" ? "Try again" : "Find connections"}</button>}
         </div>
       )}
 
@@ -168,7 +171,7 @@ export function Detail({ summary, bookId, onClose }: { summary: Pick<ApiConceptS
     <div>
       <h3 className="conn-name">{summary.name}</h3>
       {summary.description && <p className="conn-desc">{summary.description}</p>}
-      {shared && !compare && (
+      {shared && !compare && !STATIC_DEMO && (
         <button className="enter-btn conn-compare" onClick={runCompare} disabled={comparing}>
           {comparing ? "Comparing the books…" : `Where do these ${concept!.books.length} books agree?`}
         </button>

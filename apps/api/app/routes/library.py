@@ -110,13 +110,12 @@ def search(db: Db, q: Annotated[str, Query(min_length=1, max_length=200)], limit
     return SearchOut(books=[book_out(b) for b in books], passages=passages, genres=[genre_out(g) for g in genres])
 
 
-@router.post("/import/gutenberg", response_model=BookOut, status_code=201)
-def import_gutenberg(body: GutenbergIn, db: Db) -> BookOut:
-    """Download a public-domain EPUB from Project Gutenberg and add it to a genre."""
-    genre = db.get(Genre, body.genre_id)
+def add_gutenberg(db: Session, gutenberg_id: int, genre_id: str) -> Book:
+    """Download a public-domain EPUB from Project Gutenberg into a genre (reading it happens afterwards)."""
+    genre = db.get(Genre, genre_id)
     if genre is None:
         raise HTTPException(400, "Unknown genre")
-    url = f"https://www.gutenberg.org/ebooks/{body.gutenberg_id}.epub3.images"
+    url = f"https://www.gutenberg.org/ebooks/{gutenberg_id}.epub3.images"
     try:
         resp = httpx.get(url, follow_redirects=True, timeout=60, headers={"User-Agent": "bunko/0.1"})
         resp.raise_for_status()
@@ -128,10 +127,16 @@ def import_gutenberg(body: GutenbergIn, db: Db) -> BookOut:
     book_id = str(uuid.uuid4())
     file_name = f"{book_id}.epub"
     (settings.books_dir / file_name).write_bytes(resp.content)
-    book = Book(id=book_id, title=f"gutenberg-{body.gutenberg_id}.epub", genre_id=genre.id, format="epub", file_name=file_name)
+    book = Book(id=book_id, title=f"gutenberg-{gutenberg_id}.epub", genre_id=genre.id, format="epub", file_name=file_name)
     db.add(book)
     db.commit()
+    return book
+
+
+@router.post("/import/gutenberg", response_model=BookOut, status_code=201)
+def import_gutenberg(body: GutenbergIn, db: Db) -> BookOut:
+    """Download a public-domain EPUB from Project Gutenberg and add it to a genre."""
+    book = add_gutenberg(db, body.gutenberg_id, body.genre_id)
     enqueue_ingest(book.id)
     db.refresh(book)
     return book_out(book)
-
